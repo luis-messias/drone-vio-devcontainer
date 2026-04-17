@@ -1,9 +1,11 @@
 FROM nvcr.io/nvidia/cuda:12.8.1-cudnn-runtime-ubuntu22.04
 
+# Environment variables
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=en_US.UTF-8 \
     NVIDIA_VISIBLE_DEVICES=all \
-    NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    NVIDIA_DRIVER_CAPABILITIES=compute,utility \
+    SHELL=/usr/bin/zsh
 
 # ROS 2 Humble
 RUN apt-get update \
@@ -27,6 +29,7 @@ RUN apt-get update \
         ros-humble-ros-base \
         ros-dev-tools \
         ros-humble-rqt-graph \
+        ros-humble-rviz2 \
         libeigen3-dev \
         libceres-dev \
         libgoogle-glog-dev \
@@ -44,9 +47,12 @@ RUN apt-get update \
         python3-numpy \
         python3-scipy \
         ros-humble-cv-bridge \
+        ros-humble-ros-gz-bridge \
         ros-humble-image-transport \
         ros-humble-tf2-geometry-msgs \
         ros-humble-tf-transformations \
+        python3-argcomplete \
+        zsh \
     && rm -rf /var/lib/apt/lists/*
 
 # PX4 messages
@@ -61,8 +67,19 @@ RUN bash -c "source /opt/ros/humble/setup.bash && colcon build --symlink-install
 RUN mkdir -p /workspace/src
 RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc \
     && echo "source /opt/px4_msgs_ws/install/setup.bash" >> /root/.bashrc \
-    && echo "[ -f /workspace/install/setup.bash ] && source /workspace/install/setup.bash" >> /root/.bashrc
+    && echo "[ -f /workspace/install/setup.bash ] && source /workspace/install/setup.bash" >> /root/.bashrc \
+    && echo 'if command -v register-python-argcomplete3 >/dev/null 2>&1; then eval "$(register-python-argcomplete3 ros2)"; fi' >> /root/.bashrc
 
-# Start bash
+# Oh My Zsh (non-interactive install; skip exec zsh at end of install script)
+RUN RUNZSH=no CHSH=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
+    && git clone --depth=1 https://github.com/spaceship-prompt/spaceship-prompt.git /root/.oh-my-zsh/custom/themes/spaceship-prompt \
+    && ln -s /root/.oh-my-zsh/custom/themes/spaceship-prompt/spaceship.zsh-theme /root/.oh-my-zsh/custom/themes/spaceship.zsh-theme \
+    && sed -i 's/^ZSH_THEME=".*"/ZSH_THEME="spaceship"/' /root/.zshrc \
+    && echo 'source /opt/ros/humble/setup.zsh' >> /root/.zshrc \
+    && echo 'source /opt/px4_msgs_ws/install/setup.zsh' >> /root/.zshrc \
+    && echo '[ -f /workspace/install/setup.zsh ] && source /workspace/install/setup.zsh' >> /root/.zshrc \
+    && echo 'autoload -U +X bashcompinit && bashcompinit' >> /root/.zshrc \
+    && echo 'if command -v register-python-argcomplete3 >/dev/null 2>&1; then eval "$(register-python-argcomplete3 ros2)"; fi' >> /root/.zshrc
+
 WORKDIR /workspace
-CMD ["/bin/bash", "-lc", "exec /bin/bash"]
+CMD ["/usr/bin/zsh", "-l"]
