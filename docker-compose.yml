@@ -1,0 +1,28 @@
+services:
+  sensor_fusion:
+    build: .
+    image: ros2-dev-container:dev
+    container_name: ros2-dev-container
+    stdin_open: true
+    tty: true
+    environment:
+      ROS_DOMAIN_ID: ${DRONE_ID:-1}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: SUBNET
+      NVIDIA_VISIBLE_DEVICES: ${NVIDIA_VISIBLE_DEVICES:-all}
+      NVIDIA_DRIVER_CAPABILITIES: ${NVIDIA_DRIVER_CAPABILITIES:-compute,utility}
+    volumes:
+      - ros2_workspace:/workspace
+      - ${ROS2_PACKAGES_HOST_PATH:-../ros2-packages}:/workspace/src:cached
+    working_dir: /workspace
+    networks:
+      aas_sim:
+        ipv4_address: ${FUSION_HOST_IP:-10.42.90.200}
+    gpus: all
+
+volumes:
+  ros2_workspace:
+
+networks:
+  aas_sim:
+    name: ${SIM_NETWORK_NAME:-aas-sim-network-inst0}
+    external: true
