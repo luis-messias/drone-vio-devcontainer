@@ -1,8 +1,8 @@
 services:
   sensor_fusion:
     build: .
-    image: ros2-dev-container:dev
-    container_name: ros2-dev-container
+    image: drone-vio-devcontainer:dev
+    container_name: drone-vio-devcontainer-${INSTANCE:-0}
     stdin_open: true
     tty: true
     environment:
@@ -18,6 +18,8 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     working_dir: /workspace
     networks:
+      # AAS uses the second octet offset by INSTANCE; if you run with
+      # INSTANCE != 0 update FUSION_HOST_IP to 10.42.<90+INSTANCE>.200.
       aas_sim:
         ipv4_address: ${FUSION_HOST_IP:-10.42.90.200}
     gpus: all
