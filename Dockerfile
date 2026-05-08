@@ -30,6 +30,7 @@ RUN apt-get update \
         ros-dev-tools \
         ros-humble-rqt-graph \
         ros-humble-rviz2 \
+        libboost-all-dev \
         libeigen3-dev \
         libceres-dev \
         libgoogle-glog-dev \
@@ -51,22 +52,22 @@ RUN apt-get update \
         ros-humble-image-transport \
         ros-humble-tf2-geometry-msgs \
         ros-humble-tf-transformations \
+        ros-humble-geographic-msgs \
         python3-argcomplete \
         zsh \
     && rm -rf /var/lib/apt/lists/*
 
 # PX4 messages
-WORKDIR /opt/px4_msgs_ws
-RUN git clone --depth 1 --branch release/1.16 https://github.com/PX4/px4_msgs.git src/px4_msgs
-RUN rosdep init 2>/dev/null || true \
-    && rosdep update \
-    && rosdep install --from-paths src --ignore-src --rosdistro humble -y
-RUN bash -c "source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release"
+# WORKDIR /opt/px4_msgs_ws
+# RUN git clone --depth 1 --branch release/1.16 https://github.com/PX4/px4_msgs.git src/px4_msgs
+# RUN rosdep init 2>/dev/null || true \
+#     && rosdep update \
+#     && rosdep install --from-paths src --ignore-src --rosdistro humble -y
+# RUN bash -c "source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release"
 
 # ROS 2 workspace
 RUN mkdir -p /workspace/src
 RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc \
-    && echo "source /opt/px4_msgs_ws/install/setup.bash" >> /root/.bashrc \
     && echo "[ -f /workspace/install/setup.bash ] && source /workspace/install/setup.bash" >> /root/.bashrc \
     && echo 'if command -v register-python-argcomplete3 >/dev/null 2>&1; then eval "$(register-python-argcomplete3 ros2)"; fi' >> /root/.bashrc
 
